@@ -98,3 +98,5 @@ export const connectToSocket = (server) => {
     });
   });
 };
+
+export default connectToSocket;

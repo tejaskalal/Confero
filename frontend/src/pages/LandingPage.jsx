@@ -22,7 +22,7 @@ const LandingPage = () => {
             <h1 style={{ color: "#FF9839" }}>Be there, from anywhere.</h1>
             <p>Cover all your meetings in one place</p>
             <div role="button">
-              <Link to="/home">Get Started</Link>
+              <Link to="/auth">Get Started</Link>
             </div>
           </div>
           <div>

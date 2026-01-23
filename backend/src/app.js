@@ -8,7 +8,14 @@ import userRoutes from "./routes/users.routes.js";
 
 const app = express();
 const server = createServer(app);
-const io = connectToSocket(server);
+const io = connectToSocket(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+    allowedHeaders: ["*"],
+    credentials: true,
+  },
+});
 
 app.set("port", process.env.PORT || 8000);
 app.use(cors());
