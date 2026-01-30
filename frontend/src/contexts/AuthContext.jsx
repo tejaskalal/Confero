@@ -1,5 +1,6 @@
 import axios from "axios";
-import { createContext, useContext, useNavigate } from "react";
+import { createContext, useContext, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export const AuthContext = createContext({});
 
@@ -8,42 +9,51 @@ const client = axios.create({
 });
 
 export const AuthProvider = ({ children }) => {
-  const authContext = useContext(AuthContext);
+  const [userData, setUserData] = useState(null);
 
-  const [userData, setUserData] = useState(authContext);
-
-  const router = useNavigate();
+  const navigate = useNavigate();
 
   const handleRegister = async (name, username, password) => {
     try {
-      let request = await client.post("/register", {
-        name: name,
-        username: username,
-        password: password,
+      const request = await client.post("/register", {
+        name,
+        username,
+        password,
       });
 
-      if (request.status === httpStatus.CREATED) {
+      if (request.status === 201) {
         return request.data.message;
       }
     } catch (err) {
+      console.log("REGISTER ERROR:", err.response?.data || err.message);
       throw err;
     }
   };
 
   const handleLogin = async (username, password) => {
     try {
-      let request = await client.post("/login", {
-        username: username,
-        password: password,
+      const request = await client.post("/login", {
+        username,
+        password,
       });
 
-      if (request.status === httpStatus.OK) {
+      console.log("LOGIN RESPONSE:", request.data);
+
+      if (request.status === 200 && request.data?.token) {
         localStorage.setItem("token", request.data.token);
-        router("/home");
+        setUserData(request.data.user);
+        navigate("/home");
       }
     } catch (err) {
+      console.log("LOGIN ERROR:", err.response?.data || err.message);
       throw err;
     }
+  };
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    setUserData(null);
+    navigate("/login");
   };
 
   const data = {
@@ -51,7 +61,10 @@ export const AuthProvider = ({ children }) => {
     setUserData,
     handleRegister,
     handleLogin,
+    logout,
   };
 
   return <AuthContext.Provider value={data}>{children}</AuthContext.Provider>;
 };
+
+export const useAuth = () => useContext(AuthContext);
