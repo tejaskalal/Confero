@@ -19,6 +19,7 @@ var connections = {};
 const peerConfigConnections = {
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
 };
+
 function VideoMeet() {
   var socketRef = useRef();
   let socketIdRef = useRef();
@@ -54,7 +55,7 @@ function VideoMeet() {
   let [videos, setVideos] = useState([]);
 
   useEffect(() => {
-    console.log("HELLO");
+    console.log("Hello");
     getPermissions();
   });
 
@@ -120,7 +121,7 @@ function VideoMeet() {
   useEffect(() => {
     if (video !== undefined && audio !== undefined) {
       getUserMedia();
-      console.log("SET STATE HAS ", video, audio);
+      console.log("set state has ", video, audio);
     }
   }, [video, audio]);
   let getMedia = () => {
@@ -213,7 +214,7 @@ function VideoMeet() {
   };
 
   let getDislayMediaSuccess = (stream) => {
-    console.log("HERE");
+    console.log("here");
     try {
       window.localStream.getTracks().forEach((track) => track.stop());
     } catch (e) {
@@ -323,7 +324,6 @@ function VideoMeet() {
           connections[socketListId] = new RTCPeerConnection(
             peerConfigConnections,
           );
-          // Wait for their ice candidate
           connections[socketListId].onicecandidate = function (event) {
             if (event.candidate != null) {
               socketRef.current.emit(
@@ -336,15 +336,15 @@ function VideoMeet() {
 
           // Wait for their video stream
           connections[socketListId].onaddstream = (event) => {
-            console.log("BEFORE:", videoRef.current);
-            console.log("FINDING ID: ", socketListId);
+            console.log("before:", videoRef.current);
+            console.log("finding id: ", socketListId);
 
             let videoExists = videoRef.current.find(
               (video) => video.socketId === socketListId,
             );
 
             if (videoExists) {
-              console.log("FOUND EXISTING");
+              console.log("found existing");
 
               // Update the stream of the existing video
               setVideos((videos) => {
@@ -358,7 +358,7 @@ function VideoMeet() {
               });
             } else {
               // Create a new video
-              console.log("CREATING NEW");
+              console.log("creating new");
               let newVideo = {
                 socketId: socketListId,
                 stream: event.stream,
@@ -419,6 +419,7 @@ function VideoMeet() {
     ctx.resume();
     return Object.assign(dst.stream.getAudioTracks()[0], { enabled: false });
   };
+
   let black = ({ width = 640, height = 480 } = {}) => {
     let canvas = Object.assign(document.createElement("canvas"), {
       width,
@@ -431,11 +432,9 @@ function VideoMeet() {
 
   let handleVideo = () => {
     setVideo(!video);
-    // getUserMedia();
   };
   let handleAudio = () => {
     setAudio(!audio);
-    // getUserMedia();
   };
 
   useEffect(() => {
@@ -459,9 +458,11 @@ function VideoMeet() {
     setModal(true);
     setNewMessages(0);
   };
+
   let closeChat = () => {
     setModal(false);
   };
+
   let handleMessage = (e) => {
     setMessage(e.target.value);
   };
@@ -478,10 +479,13 @@ function VideoMeet() {
 
   let sendMessage = () => {
     console.log(socketRef.current);
-    socketRef.current.emit("chat-message", message, username);
+    socketRef.current.emit(
+      "chat-message",
+      message,
+      username,
+      socketIdRef.current,
+    );
     setMessage("");
-
-    // this.setState({ message: "", sender: username })
   };
 
   let connect = () => {
@@ -578,7 +582,7 @@ function VideoMeet() {
                 onClick={() => setModal(!showModal)}
                 style={{ color: "white" }}
               >
-                <ChatIcon />{" "}
+                <ChatIcon />
               </IconButton>
             </Badge>
           </div>

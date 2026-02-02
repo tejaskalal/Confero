@@ -1,7 +1,9 @@
 import "../App.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const LandingPage = () => {
+  const router = useNavigate();
+
   return (
     <>
       <div className="landingPageContainer">
@@ -10,9 +12,26 @@ const LandingPage = () => {
             <h2>Confero</h2>
           </div>
           <div className="navList">
-            <p>Join as guest</p>
-            <p>Register</p>
-            <div role="button">
+            <p
+              onClick={() => {
+                router("/guest_join");
+              }}
+            >
+              Join as guest
+            </p>
+            <p
+              onClick={() => {
+                router("/auth");
+              }}
+            >
+              Register
+            </p>
+            <div
+              role="button"
+              onClick={() => {
+                router("/auth");
+              }}
+            >
               <p>Login</p>
             </div>
           </div>

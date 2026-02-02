@@ -1,30 +1,40 @@
-import React, { useState } from "react";
-import WithAuth from "../utils/WithAuth";
+import React, { useContext, useState } from "react";
+import withAuth from "../utils/withAuth";
 import { useNavigate } from "react-router-dom";
 import "../App.css";
+import { Button, IconButton, TextField } from "@mui/material";
 import RestoreIcon from "@mui/icons-material/Restore";
-import Button from "@mui/material/Button";
-import { IconButton, TextField } from "@mui/material";
+import { AuthContext } from "../contexts/AuthContext";
 
-function Home() {
+function HomeComponent() {
   let navigate = useNavigate();
   const [meetingCode, setMeetingCode] = useState("");
 
+  const { addToUserHistory } = useContext(AuthContext);
+
   let handleJoinVideoCall = async () => {
+    console.log("Join button clicked", meetingCode);
+    await addToUserHistory(meetingCode);
     navigate(`/${meetingCode}`);
   };
 
   return (
     <>
-      <div className="naBar">
+      <div className="navBar">
         <div style={{ display: "flex", alignItems: "center" }}>
           <h2>Confero Video Call</h2>
         </div>
+
         <div style={{ display: "flex", alignItems: "center" }}>
-          <IconButton>
+          <IconButton
+            onClick={() => {
+              navigate("/history");
+            }}
+          >
             <RestoreIcon />
           </IconButton>
           <p>History</p>
+
           <Button
             onClick={() => {
               localStorage.removeItem("token");
@@ -35,29 +45,31 @@ function Home() {
           </Button>
         </div>
       </div>
+
       <div className="meetContainer">
         <div className="leftPanel">
           <div>
-            <h2>Providing Quality Video Call Juat Like Quality Butter</h2>
+            <h2>Providing Quality Video Call </h2>
+
             <div style={{ display: "flex", gap: "10px" }}>
               <TextField
                 onChange={(e) => setMeetingCode(e.target.value)}
                 id="outlined-basic"
                 label="Meeting Code"
                 variant="outlined"
-              ></TextField>
+              />
               <Button onClick={handleJoinVideoCall} variant="contained">
-                Join Meeting
+                Join
               </Button>
             </div>
           </div>
         </div>
         <div className="rightPanel">
-          <img srcSet="/videocallimg.png" alt="video-call-img" />
+          <img srcSet="/videocallimg.png" alt="video-img" />
         </div>
       </div>
     </>
   );
 }
 
-export default WithAuth(Home);
+export default withAuth(HomeComponent);
