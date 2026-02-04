@@ -23,12 +23,12 @@ const peerConfigConnections = {
 function VideoMeet() {
   var socketRef = useRef();
   let socketIdRef = useRef();
+
   let localVideoref = useRef();
-  let remoteAudioRef = useRef(null);
 
-  let [videoAvailable, setVideoAvailable] = useState();
+  let [videoAvailable, setVideoAvailable] = useState(true);
 
-  let [audioAvailable, setAudioAvailable] = useState();
+  let [audioAvailable, setAudioAvailable] = useState(true);
 
   let [video, setVideo] = useState([]);
 
@@ -44,7 +44,7 @@ function VideoMeet() {
 
   let [message, setMessage] = useState("");
 
-  let [newMessages, setNewMessages] = useState(2);
+  let [newMessages, setNewMessages] = useState(3);
 
   let [askForUsername, setAskForUsername] = useState(true);
 
@@ -118,10 +118,99 @@ function VideoMeet() {
     }
   };
 
+  useEffect(() => {
+    if (video !== undefined && audio !== undefined) {
+      getUserMedia();
+      console.log("SET STATE HAS ", video, audio);
+    }
+  }, [video, audio]);
   let getMedia = () => {
     setVideo(videoAvailable);
     setAudio(audioAvailable);
     connectToSocketServer();
+  };
+
+  let getUserMediaSuccess = (stream) => {
+    try {
+      window.localStream.getTracks().forEach((track) => track.stop());
+    } catch (e) {
+      console.log(e);
+    }
+
+    window.localStream = stream;
+    localVideoref.current.srcObject = stream;
+
+    for (let id in connections) {
+      if (id === socketIdRef.current) continue;
+
+      connections[id].addStream(window.localStream);
+
+      connections[id].createOffer().then((description) => {
+        console.log(description);
+        connections[id]
+          .setLocalDescription(description)
+          .then(() => {
+            socketRef.current.emit(
+              "signal",
+              id,
+              JSON.stringify({ sdp: connections[id].localDescription }),
+            );
+          })
+          .catch((e) => console.log(e));
+      });
+    }
+
+    stream.getTracks().forEach(
+      (track) =>
+        (track.onended = () => {
+          setVideo(false);
+          setAudio(false);
+
+          try {
+            let tracks = localVideoref.current.srcObject.getTracks();
+            tracks.forEach((track) => track.stop());
+          } catch (e) {
+            console.log(e);
+          }
+
+          let blackSilence = (...args) =>
+            new MediaStream([black(...args), silence()]);
+          window.localStream = blackSilence();
+          localVideoref.current.srcObject = window.localStream;
+
+          for (let id in connections) {
+            connections[id].addStream(window.localStream);
+
+            connections[id].createOffer().then((description) => {
+              connections[id]
+                .setLocalDescription(description)
+                .then(() => {
+                  socketRef.current.emit(
+                    "signal",
+                    id,
+                    JSON.stringify({ sdp: connections[id].localDescription }),
+                  );
+                })
+                .catch((e) => console.log(e));
+            });
+          }
+        }),
+    );
+  };
+
+  let getUserMedia = () => {
+    if ((video && videoAvailable) || (audio && audioAvailable)) {
+      navigator.mediaDevices
+        .getUserMedia({ video: video, audio: audio })
+        .then(getUserMediaSuccess)
+        .then((stream) => {})
+        .catch((e) => console.log(e));
+    } else {
+      try {
+        let tracks = localVideoref.current.srcObject.getTracks();
+        tracks.forEach((track) => track.stop());
+      } catch (e) {}
+    }
   };
 
   let getDislayMediaSuccess = (stream) => {
@@ -331,7 +420,6 @@ function VideoMeet() {
     ctx.resume();
     return Object.assign(dst.stream.getAudioTracks()[0], { enabled: false });
   };
-
   let black = ({ width = 640, height = 480 } = {}) => {
     let canvas = Object.assign(document.createElement("canvas"), {
       width,
@@ -343,25 +431,10 @@ function VideoMeet() {
   };
 
   let handleVideo = () => {
-    const videoTrack = window.localStream
-      ?.getTracks()
-      .find((t) => t.kind === "video");
-
-    if (videoTrack) {
-      videoTrack.enabled = !videoTrack.enabled;
-      setVideo(videoTrack.enabled);
-    }
+    setVideo(!video);
   };
-
   let handleAudio = () => {
-    const audioTrack = window.localStream
-      ?.getTracks()
-      .find((t) => t.kind === "audio");
-
-    if (audioTrack) {
-      audioTrack.enabled = !audioTrack.enabled;
-      setAudio(audioTrack.enabled);
-    }
+    setAudio(!audio);
   };
 
   useEffect(() => {
@@ -374,7 +447,10 @@ function VideoMeet() {
   };
 
   let handleEndCall = () => {
-    window.localStream?.getTracks().forEach((track) => track.stop());
+    try {
+      let tracks = localVideoref.current.srcObject.getTracks();
+      tracks.forEach((track) => track.stop());
+    } catch (e) {}
     window.location.href = "/";
   };
 
@@ -405,14 +481,7 @@ function VideoMeet() {
     setMessage("");
   };
 
-  let connect = async () => {
-    try {
-      await remoteAudioRef.current.play();
-      console.log("Audio unlocked");
-    } catch (e) {
-      console.log("Audio unlock blocked (will retry on track)");
-    }
-
+  let connect = () => {
     setAskForUsername(false);
     getMedia();
   };
@@ -517,8 +586,6 @@ function VideoMeet() {
             autoPlay
             muted
           ></video>
-
-          <audio ref={remoteAudioRef} autoPlay playsInline />
 
           <div className={styles.conferenceView}>
             {videos.map((video) => (

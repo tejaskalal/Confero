@@ -3,101 +3,75 @@ import User from "../models/user.model.js";
 import { Meeting } from "../models/meeting.model.js";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
-
 const login = async (req, res) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
-    return res
-      .status(httpStatus.BAD_REQUEST)
-      .json({ message: "All fields are required" });
+    return res.status(400).json({ message: "Please Provide" });
   }
 
   try {
     const user = await User.findOne({ username });
-
     if (!user) {
       return res
-        .status(httpStatus.UNAUTHORIZED)
-        .json({ message: "User not found" });
+        .status(httpStatus.NOT_FOUND)
+        .json({ message: "User Not Found" });
     }
 
-    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    let isPasswordCorrect = await bcrypt.compare(password, user.password);
 
-    if (!isPasswordCorrect) {
+    if (isPasswordCorrect) {
+      let token = crypto.randomBytes(20).toString("hex");
+
+      user.token = token;
+      await user.save();
+      return res.status(httpStatus.OK).json({ token: token });
+    } else {
       return res
         .status(httpStatus.UNAUTHORIZED)
-        .json({ message: "Invalid username or password" });
+        .json({ message: "Invalid Username or password" });
     }
-
-    const token = crypto.randomBytes(32).toString("hex");
-
-    user.token = token;
-    await user.save();
-
-    return res.status(httpStatus.OK).json({
-      message: "Login successful",
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        username: user.username,
-      },
-    });
-  } catch (error) {
-    return res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
-      .json({ message: "Server error", error });
+  } catch (e) {
+    return res.status(500).json({ message: `Something went wrong ${e}` });
   }
 };
 
 const register = async (req, res) => {
   const { name, username, password } = req.body;
 
-  if (!name || !username || !password) {
-    return res
-      .status(httpStatus.BAD_REQUEST)
-      .json({ message: "All fields are required" });
-  }
-
   try {
     const existingUser = await User.findOne({ username });
-
     if (existingUser) {
       return res
-        .status(httpStatus.CONFLICT)
+        .status(httpStatus.FOUND)
         .json({ message: "User already exists" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = new User({
-      name,
-      username,
+      name: name,
+      username: username,
       password: hashedPassword,
     });
 
     await newUser.save();
 
-    return res
-      .status(httpStatus.CREATED)
-      .json({ message: "User registered successfully" });
-  } catch (error) {
-    return res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
-      .json({ message: "Server error", error });
+    res.status(httpStatus.CREATED).json({ message: "User Registered" });
+  } catch (e) {
+    res.json({ message: `Something went wrong ${e}` });
   }
 };
 
 const getUserHistory = async (req, res) => {
-  const { token } = req.body;
+  const { token } = req.query;
 
   try {
     const user = await User.findOne({ token: token });
     const meetings = await Meeting.find({ user_id: user.username });
     res.json(meetings);
   } catch (e) {
-    res.json({ message: `Something went wrong${e}` });
+    res.json({ message: `Something went wrong ${e}` });
   }
 };
 
@@ -120,4 +94,32 @@ const addToHistory = async (req, res) => {
   }
 };
 
-export { login, register, getUserHistory, addToHistory };
+const logout = async (req, res) => {
+  const { token } = req.body;
+
+  if (!token) {
+    return res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ message: "Token is required" });
+  }
+
+  try {
+    const user = await User.findOne({ token });
+    if (!user) {
+      return res
+        .status(httpStatus.UNAUTHORIZED)
+        .json({ message: "Invalid token" });
+    }
+
+    user.token = null;
+    await user.save();
+
+    return res.status(httpStatus.OK).json({ message: "Logout successful" });
+  } catch (error) {
+    return res
+      .status(httpStatus.INTERNAL_SERVER_ERROR)
+      .json({ message: "Server error" });
+  }
+};
+
+export { login, register, getUserHistory, addToHistory, logout };

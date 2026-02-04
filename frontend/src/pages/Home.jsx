@@ -6,14 +6,12 @@ import { Button, IconButton, TextField } from "@mui/material";
 import RestoreIcon from "@mui/icons-material/Restore";
 import { AuthContext } from "../contexts/AuthContext";
 
-function HomeComponent() {
+function Home() {
   let navigate = useNavigate();
   const [meetingCode, setMeetingCode] = useState("");
 
   const { addToUserHistory } = useContext(AuthContext);
-
   let handleJoinVideoCall = async () => {
-    console.log("Join button clicked", meetingCode);
     await addToUserHistory(meetingCode);
     navigate(`/${meetingCode}`);
   };
@@ -49,7 +47,7 @@ function HomeComponent() {
       <div className="meetContainer">
         <div className="leftPanel">
           <div>
-            <h2>Providing Quality Video Call </h2>
+            <h2>Providing Quality Video Call</h2>
 
             <div style={{ display: "flex", gap: "10px" }}>
               <TextField
@@ -65,11 +63,11 @@ function HomeComponent() {
           </div>
         </div>
         <div className="rightPanel">
-          <img srcSet="/videocallimg.png" alt="video-img" />
+          <img srcSet="/videocallimg.png" alt="" />
         </div>
       </div>
     </>
   );
 }
 
-export default withAuth(HomeComponent);
+export default withAuth(Home);

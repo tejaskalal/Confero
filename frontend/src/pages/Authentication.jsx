@@ -13,14 +13,15 @@ import { Snackbar } from "@mui/material";
 
 const defaultTheme = createTheme();
 
-export default function Authentication() {
-  const [username, setUsername] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [name, setName] = React.useState("");
-  const [error, setError] = React.useState("");
-  const [message, setMessage] = React.useState("");
+function Authentication() {
+  const [username, setUsername] = React.useState();
+  const [password, setPassword] = React.useState();
+  const [name, setName] = React.useState();
+  const [error, setError] = React.useState();
+  const [message, setMessage] = React.useState();
 
   const [formState, setFormState] = React.useState(0);
+
   const [open, setOpen] = React.useState(false);
 
   const { handleRegister, handleLogin } = React.useContext(AuthContext);
@@ -42,7 +43,7 @@ export default function Authentication() {
       }
     } catch (err) {
       console.log(err);
-      let message = err?.response?.data?.message || "";
+      let message = err.response.data.message;
       setError(message);
     }
   };
@@ -85,13 +86,17 @@ export default function Authentication() {
             <div>
               <Button
                 variant={formState === 0 ? "contained" : ""}
-                onClick={() => setFormState(0)}
+                onClick={() => {
+                  setFormState(0);
+                }}
               >
                 Sign In
               </Button>
               <Button
                 variant={formState === 1 ? "contained" : ""}
-                onClick={() => setFormState(1)}
+                onClick={() => {
+                  setFormState(1);
+                }}
               >
                 Sign Up
               </Button>
@@ -110,7 +115,9 @@ export default function Authentication() {
                   autoFocus
                   onChange={(e) => setName(e.target.value)}
                 />
-              ) : null}
+              ) : (
+                <></>
+              )}
 
               <TextField
                 margin="normal"
@@ -155,3 +162,5 @@ export default function Authentication() {
     </ThemeProvider>
   );
 }
+
+export default Authentication;
