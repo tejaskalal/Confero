@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import withAuth from "../utils/WithAuth";
+import WithAuth from "../utils/WithAuth";
 import { useNavigate } from "react-router-dom";
 import "../App.css";
 import { Button, IconButton, TextField } from "@mui/material";
@@ -70,4 +70,4 @@ function Home() {
   );
 }
 
-export default withAuth(Home);
+export default WithAuth(Home);
