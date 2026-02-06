@@ -4,6 +4,7 @@ Confero is a full-stack real-time video conferencing web application that allows
 
 ---
 **Live Demo:** https://conferofrontend.onrender.com
+**Backend API:** https://conferobackend.onrender.com  
 
 ## Features
 
@@ -18,7 +19,7 @@ Confero is a full-stack real-time video conferencing web application that allows
 
 ---
 
-## Technology used
+## Technologies used
 
 - **Frontend:** React (Vite), Material UI  
 - **Backend:** Node.js, Express.js  
